@@ -1,0 +1,15 @@
+[26-Jun-2025 14:39:36 Africa/Nairobi] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'dueday.announcements' doesn't exist in C:\xampp\htdocs\dueday\admin\admin_dashboard.php:8
+Stack trace:
+#0 C:\xampp\htdocs\dueday\admin\admin_dashboard.php(8): mysqli->query('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\dueday\admin\admin_dashboard.php on line 8
+[26-Jun-2025 14:40:00 Africa/Nairobi] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'dueday.priority' doesn't exist in C:\xampp\htdocs\dueday\admin\admin_announcements.php:44
+Stack trace:
+#0 C:\xampp\htdocs\dueday\admin\admin_announcements.php(44): mysqli->query('SELECT * FROM P...')
+#1 {main}
+  thrown in C:\xampp\htdocs\dueday\admin\admin_announcements.php on line 44
+[26-Jun-2025 14:40:28 Africa/Nairobi] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'dueday.announcements' doesn't exist in C:\xampp\htdocs\dueday\admin\admin_dashboard.php:8
+Stack trace:
+#0 C:\xampp\htdocs\dueday\admin\admin_dashboard.php(8): mysqli->query('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\dueday\admin\admin_dashboard.php on line 8
