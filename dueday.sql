@@ -7,7 +7,8 @@ SET time_zone = "+00:00";
 
 
 
---
+CREATE DATABASE IF NOT EXISTS dueday;
+USE dueday;
 -- Database: `dueday`
 --
 
