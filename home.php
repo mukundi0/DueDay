@@ -11,16 +11,13 @@ if (isset($user_role) && $user_role === 'Admin'):
 <?php 
 endif; 
 
-// --- FIX: Get both the day of the week AND the current time ---
-$todays_day_of_week = date('w') + 1; // 1 (Sun) to 7 (Sat)
-$current_time = date('H:i:s');      // e.g., "18:00:00"
+$todays_day_of_week = date('w') + 1;
+$current_time = date('H:i:s');
 
 // --- DATA FETCHING FOR WIDGETS ---
-// Stat Cards
 $assignment_count = $conn->query("SELECT COUNT(*) as count FROM Assignments WHERE Assignment_DueDate >= NOW()")->fetch_assoc()['count'];
 $poll_count = $conn->query("SELECT COUNT(*) as count FROM Polls WHERE Expires_At >= NOW()")->fetch_assoc()['count'];
 
-// --- FIX: Modify the class count query to also check the time ---
 $stmt_class_count = $conn->prepare(
     "SELECT COUNT(DISTINCT uc.Class_ID) as count 
      FROM user_classes uc 
@@ -32,7 +29,6 @@ $stmt_class_count->execute();
 $class_count = $stmt_class_count->get_result()->fetch_assoc()['count'];
 $stmt_class_count->close();
 
-// Unread Comments Count Logic
 $stmt_comments = $conn->prepare(
     "SELECT COUNT(ac.Comment_ID) as count
      FROM assignment_comments ac
@@ -46,7 +42,6 @@ $stmt_comments->execute();
 $unread_comments = $stmt_comments->get_result()->fetch_assoc()['count'] ?? 0;
 $stmt_comments->close();
 
-// Units You're Involved In
 $units_with_status_sql = "SELECT c.Class_ID, c.Class_Name, (SELECT COUNT(*) FROM Assignments a WHERE a.Class_ID = c.Class_ID AND a.Assignment_DueDate >= NOW()) as pending_assignments, (SELECT COUNT(*) FROM Polls p WHERE p.Class_ID = c.Class_ID AND p.Expires_At >= NOW()) as active_polls FROM Classes c JOIN User_Classes uc ON c.Class_ID = uc.Class_ID WHERE uc.User_ID = ?";
 $stmt_units = $conn->prepare($units_with_status_sql);
 $stmt_units->bind_param("i", $user_id);
@@ -54,7 +49,6 @@ $stmt_units->execute();
 $user_units = $stmt_units->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt_units->close();
 
-// --- FIX: Today's Classes Widget Query now checks the current time ---
 $todays_classes_sql = "SELECT cs.Start_Time, cs.End_Time, c.Class_Name, v.Venue_Name 
                        FROM Class_Schedule cs 
                        JOIN Classes c ON cs.Class_ID = c.Class_ID 
@@ -68,7 +62,6 @@ $stmt_today->execute();
 $todays_classes = $stmt_today->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt_today->close();
 
-// Assignments Due Widget
 function format_due_date(string $due_date_str): string {
     $due = new DateTime($due_date_str); $now = new DateTime(); $diff = $now->diff($due);
     if ($due < $now) return 'Overdue';
@@ -78,9 +71,12 @@ function format_due_date(string $due_date_str): string {
 }
 $assignments_due = $conn->query("SELECT Assignment_Title, Assignment_DueDate FROM Assignments WHERE Assignment_DueDate >= NOW() ORDER BY Assignment_DueDate ASC LIMIT 3")->fetch_all(MYSQLI_ASSOC);
 
-// Notifications Widget
-$stmt_notifications = $conn->prepare("SELECT Notification_Content FROM Notifications n JOIN Notification_User nu ON n.Notification_ID = nu.Notification_ID WHERE nu.User_ID = ? ORDER BY n.Notification_Date DESC LIMIT 3");
-$stmt_notifications->bind_param("i", $user_id);
+$stmt_notifications = $conn->prepare(
+    "SELECT Announcement_Title, Announcement_Description 
+     FROM Announcements 
+     WHERE Status = 'Active' 
+     ORDER BY Announcement_ID DESC LIMIT 3"
+);
 $stmt_notifications->execute();
 $notifications = $stmt_notifications->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt_notifications->close();
@@ -157,7 +153,8 @@ $stmt_notifications->close();
                 <?php foreach($notifications as $notification): ?>
                 <li class="widget-list-item">
                     <div class="item-content">
-                        <span class="item-title"><?php echo htmlspecialchars($notification['Notification_Content']); ?></span>
+                        <span class="item-title"><?php echo htmlspecialchars($notification['Announcement_Title']); ?></span>
+                        <span class="item-meta"><?php echo htmlspecialchars($notification['Announcement_Description']); ?></span>
                     </div>
                 </li>
                 <?php endforeach; ?>

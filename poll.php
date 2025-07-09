@@ -21,19 +21,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: poll.php?created=success");
         exit();
     }
-    // This logic already supports changing a vote because it deletes the old one first.
+    
     if ($action === 'submit_vote') {
         $poll_id = $_POST['poll_id'];
         $selected_options = $_POST['option'] ?? [];
         if (!is_array($selected_options)) { $selected_options = [$selected_options]; }
+
         if (!empty($selected_options)) {
-            $stmt_delete = $conn->prepare("DELETE FROM Poll_Data WHERE User_ID = ? AND Poll_ID = ?");
-            $stmt_delete->bind_param("ii", $user_id, $poll_id);
-            $stmt_delete->execute();
-            $stmt_insert = $conn->prepare("INSERT INTO Poll_Data (User_ID, Poll_ID, Option_ID) VALUES (?, ?, ?)");
-            foreach ($selected_options as $option_id) { $stmt_insert->bind_param("iii", $user_id, $poll_id, $option_id); $stmt_insert->execute(); }
-            // Only award achievement on the first vote
-            award_achievement($conn, $user_id, 3);
+            $conn->begin_transaction();
+            try {
+                $stmt_delete = $conn->prepare("DELETE FROM Poll_Data WHERE User_ID = ? AND Poll_ID = ?");
+                $stmt_delete->bind_param("ii", $user_id, $poll_id);
+                $stmt_delete->execute();
+                
+                $stmt_insert = $conn->prepare("INSERT INTO Poll_Data (User_ID, Poll_ID, Option_ID) VALUES (?, ?, ?)");
+                foreach ($selected_options as $option_id) { 
+                    $stmt_insert->bind_param("iii", $user_id, $poll_id, $option_id); 
+                    $stmt_insert->execute(); 
+                }
+                
+                award_achievement($conn, $user_id, 3);
+                
+                $conn->commit();
+            } catch (mysqli_sql_exception $e) {
+                $conn->rollback();
+                error_log("Poll voting transaction failed: " . $e->getMessage());
+                header("Location: poll.php?voted=false&error=true");
+                exit();
+            }
         }
         header("Location: poll.php?voted=true");
         exit();

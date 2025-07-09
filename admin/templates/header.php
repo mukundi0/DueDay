@@ -38,6 +38,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li class="<?php if ($current_page == 'admin_classes.php') echo 'active'; ?>">
                     <a href="admin_classes.php">Classes</a>
                 </li>
+                <li class="<?php if ($current_page == 'admin_schedule.php') echo 'active'; ?>">
+                    <a href="admin_schedule.php">Schedule</a>
+                </li>
                 <li class="<?php if ($current_page == 'admin_announcements.php') echo 'active'; ?>">
                     <a href="admin_announcements.php">Announcements</a>
                 </li>

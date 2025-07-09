@@ -165,6 +165,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         commentForm.addEventListener('submit', function (e) {
             e.preventDefault();
+
+            if (commentTextArea.value.trim() === '') {
+                alert('Comment cannot be empty.');
+                return;
+            }
+
             const formData = new FormData(this);
             const submitButton = this.querySelector('button[type="submit"]');
             submitButton.disabled = true;
@@ -203,7 +209,6 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     };
     
-    // --- NEW: Code from timetable.js is now fully integrated here ---
     const initTimetablePage = () => {
         const switchViewBtn = document.getElementById('switchViewBtn');
         const dailyView = document.getElementById('dailyView');
@@ -215,8 +220,6 @@ document.addEventListener('DOMContentLoaded', function () {
     
         const scheduleDataEl = document.getElementById('schedule-data');
         if (!scheduleDataEl) {
-            // This check handles cases where the timetable page might not have the data script tag.
-            // But based on your `timetable.php`, it should always be there.
             return;
         }
         const scheduleData = JSON.parse(scheduleDataEl.textContent || '{}');
@@ -229,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
             dailyScheduleContainer.innerHTML = '';
             currentDayEl.textContent = dayNames[dayIndex];
             
-            const dayKey = dayIndex + 1; // Map JS day index (0-6) to your DB day key (1-7)
+            const dayKey = dayIndex + 1;
     
             if (scheduleData[dayKey] && scheduleData[dayKey].length > 0) {
                 scheduleData[dayKey].forEach(cls => {
