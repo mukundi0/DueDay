@@ -20,6 +20,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <title>Admin: <?php echo ucfirst(str_replace(['admin_', '.php'], '', $current_page)); ?></title>
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link rel="icon" href="../assets/icons/dueday.png" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="admin-container">
@@ -28,6 +29,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <ul class="admin-nav-menu">
                 <li class="<?php if ($current_page == 'admin_dashboard.php') echo 'active'; ?>">
                     <a href="admin_dashboard.php">Dashboard</a>
+                </li>
+                <li class="<?php if ($current_page == 'admin_analytics.php') echo 'active'; ?>">
+                    <a href="admin_analytics.php">Analytics</a>
                 </li>
                 <li class="<?php if ($current_page == 'admin_users.php' || $current_page == 'edit_user.php') echo 'active'; ?>">
                     <a href="admin_users.php">Users</a>
@@ -40,6 +44,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 </li>
                 <li class="<?php if ($current_page == 'admin_schedule.php') echo 'active'; ?>">
                     <a href="admin_schedule.php">Schedule</a>
+                </li>
+                <li class="<?php if ($current_page == 'admin_master_timetable.php') echo 'active'; ?>">
+                    <a href="admin_master_timetable.php">Master Timetable</a>
                 </li>
                 <li class="<?php if ($current_page == 'admin_announcements.php') echo 'active'; ?>">
                     <a href="admin_announcements.php">Announcements</a>

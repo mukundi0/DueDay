@@ -3,3 +3,4 @@ Stack trace:
 #0 C:\xampp\htdocs\dueday\admin\admin_classes.php(21): mysqli_stmt->execute()
 #1 {main}
   thrown in C:\xampp\htdocs\dueday\admin\admin_classes.php on line 21
+[10-Jul-2025 01:10:21 Europe/Berlin] PHP Fatal error:  Maximum execution time of 120 seconds exceeded in C:\xampp\htdocs\dueday\sse_server.php on line 23
