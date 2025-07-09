@@ -1,21 +1,49 @@
 <?php
 require_once 'templates/header.php';
 
+$message = '';
+$message_type = 'success';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'add_venue' && !empty($_POST['venue_name'])) {
         $stmt = $conn->prepare("INSERT INTO Venues (Venue_Name) VALUES (?)");
         $stmt->bind_param("s", $_POST['venue_name']);
-        $stmt->execute();
+        if ($stmt->execute()) {
+            $message = "Venue added successfully!";
+        } else {
+            $message = "Error: Could not add venue.";
+            $message_type = 'error';
+        }
+        $stmt->close();
     }
     if ($action === 'delete_venue') {
-        $stmt = $conn->prepare("DELETE FROM Venues WHERE Venue_ID = ?");
-        $stmt->bind_param("i", $_POST['venue_id']);
-        $stmt->execute();
+        try {
+            $stmt = $conn->prepare("DELETE FROM Venues WHERE Venue_ID = ?");
+            $stmt->bind_param("i", $_POST['venue_id']);
+            $stmt->execute();
+            $message = "Venue deleted successfully!";
+        } catch (mysqli_sql_exception $e) {
+            if ($e->getCode() == 1451) {
+                $message = "Cannot delete venue. It is currently assigned to an event or a scheduled class.";
+                $message_type = 'error';
+            } else {
+                $message = "An unexpected database error occurred.";
+                $message_type = 'error';
+            }
+        }
     }
-    header("Location: admin_venues.php");
+    // Redirect to show the message
+    header("Location: admin_venues.php?message=" . urlencode($message) . "&type=" . $message_type);
     exit();
 }
+
+// Check for a message from the redirect
+if(isset($_GET['message'])) {
+    $message = htmlspecialchars($_GET['message']);
+    $message_type = htmlspecialchars($_GET['type'] ?? 'success');
+}
+
 
 $venues = $conn->query("SELECT * FROM Venues ORDER BY Venue_Name ASC")->fetch_all(MYSQLI_ASSOC);
 $conn->close();
@@ -25,6 +53,13 @@ $conn->close();
 </head>
 
 <h1 class="page-title">Manage Venues</h1>
+
+<?php if ($message): ?>
+    <div class="message-banner" style="padding: 15px; margin-bottom: 20px; border-radius: 5px; background-color: <?php echo $message_type === 'success' ? '#d4edda' : '#f8d7da'; ?>; color: <?php echo $message_type === 'success' ? '#155724' : '#721c24'; ?>;">
+        <?php echo $message; ?>
+    </div>
+<?php endif; ?>
+
 <div class="widget">
     <h3>Add New Venue</h3>
     <form method="POST" action="admin_venues.php" class="widget-form">

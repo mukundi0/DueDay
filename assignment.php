@@ -6,21 +6,20 @@ require_once __DIR__ . '/core/init.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $user_id = $_SESSION['user_id'];
-    // --- FIX: Permissions returned to Module Leader ---
     $is_module_leader = ($_SESSION['role_name'] === 'Module Leader');
 
     // -- AJAX ACTION: ADD COMMENT --
     if ($action === 'add_comment') {
         header('Content-Type: application/json');
         $assignment_id = (int)$_POST['assignment_id'];
-        $comment_text = trim($_POST['comment_text']);
+        $comment_text = $_POST['comment_text'];
 
         if (empty($assignment_id)) {
             echo json_encode(['status' => 'error', 'message' => 'Invalid Assignment ID.']);
             exit();
         }
-        if (empty($comment_text)) {
-            echo json_encode(['status' => 'error', 'message' => 'Comment cannot be empty.']);
+        if (empty(trim($comment_text))) {
+            echo json_encode(['status' => 'error', 'message' => 'Comment cannot be empty or just spaces.']);
             exit();
         }
 
@@ -50,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // -- REGULAR FORM ACTION: CREATE ASSIGNMENT --
-    // --- FIX: Check if user is a Module Leader ---
     if ($action === 'create_assignment' && $is_module_leader) {
         $stmt = $conn->prepare("INSERT INTO Assignments (Assignment_Creator_ID, Class_ID, Assignment_Title, Assignment_Description, Assignment_DueDate, Assignment_Marks, Assignment_Instructions) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("iisssis", $user_id, $_POST['class_id'], $_POST['assignment_title'], $_POST['assignment_description'], $_POST['assignment_due_date'], $_POST['assignment_marks'], $_POST['assignment_instructions']);
@@ -61,26 +59,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // -- REGULAR FORM ACTION: SUBMIT ASSIGNMENT --
     if ($action === 'submit_assignment') {
-        $assignment_id = $_POST['assignment_id'];
-        if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] == UPLOAD_ERR_OK) {
-            $target_dir = "uploads/submissions/";
-            if (!is_dir($target_dir)) { mkdir($target_dir, 0755, true); }
-            $original_filename = basename($_FILES["submission_file"]["name"]);
-            $safe_filename = preg_replace("/[^a-zA-Z0-9\._-]/", "", $original_filename);
-            $target_file = $target_dir . "assign" . $assignment_id . "_user" . $user_id . "_" . time() . "_" . $safe_filename;
-            if (move_uploaded_file($_FILES["submission_file"]["tmp_name"], $target_file)) {
-                $stmt_delete = $conn->prepare("DELETE FROM Assignment_Submission_Data WHERE Assignment_ID = ? AND User_ID = ?"); $stmt_delete->bind_param("ii", $assignment_id, $user_id); $stmt_delete->execute();
-                $stmt_insert = $conn->prepare("INSERT INTO Assignment_Submission_Data (Assignment_ID, User_ID, Submission_Date, File_Path, Notes) VALUES (?, ?, NOW(), ?, ?)"); $stmt_insert->bind_param("iiss", $assignment_id, $user_id, $target_file, $_POST['submission_notes']); $stmt_insert->execute();
+        $assignment_id_to_submit = (int)$_POST['assignment_id'];
+        
+        // ** FIX: Check if the assignment still exists **
+        $assignment_check_stmt = $conn->prepare("SELECT Assignment_ID FROM Assignments WHERE Assignment_ID = ?");
+        $assignment_check_stmt->bind_param("i", $assignment_id_to_submit);
+        $assignment_check_stmt->execute();
+        $assignment_exists = $assignment_check_stmt->get_result()->num_rows > 0;
+        $assignment_check_stmt->close();
+        
+        if ($assignment_exists) {
+            if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] == UPLOAD_ERR_OK) {
+                $target_dir = "uploads/submissions/";
+                if (!is_dir($target_dir)) { mkdir($target_dir, 0755, true); }
+                $original_filename = basename($_FILES["submission_file"]["name"]);
+                $safe_filename = preg_replace("/[^a-zA-Z0-9\._-]/", "", $original_filename);
+                $target_file = $target_dir . "assign" . $assignment_id_to_submit . "_user" . $user_id . "_" . time() . "_" . $safe_filename;
+                
+                if (move_uploaded_file($_FILES["submission_file"]["tmp_name"], $target_file)) {
+                    // This logic first deletes any previous submission to allow resubmission
+                    $stmt_delete = $conn->prepare("DELETE FROM Assignment_Submission_Data WHERE Assignment_ID = ? AND User_ID = ?"); 
+                    $stmt_delete->bind_param("ii", $assignment_id_to_submit, $user_id);
+                    $stmt_delete->execute();
+                    
+                    $stmt_insert = $conn->prepare("INSERT INTO Assignment_Submission_Data (Assignment_ID, User_ID, Submission_Date, File_Path, Notes) VALUES (?, ?, NOW(), ?, ?)");
+                    $stmt_insert->bind_param("iiss", $assignment_id_to_submit, $user_id, $target_file, $_POST['submission_notes']);
+                    $stmt_insert->execute();
+                }
             }
+            header("Location: assignment.php?submission=success");
+        } else {
+            header("Location: assignment.php?error=assignment_not_found");
         }
-        header("Location: assignment.php?submission=success");
         exit();
     }
 }
 
 // --- NORMAL PAGE LOAD STARTS HERE ---
 require_once 'templates/header.php';
-// --- FIX: Permissions returned to Module Leader ---
 $is_module_leader = ($user_role === 'Module Leader');
 
 // --- DATA FETCHING for page display ---
@@ -129,6 +145,9 @@ while ($row = $result_subs->fetch_assoc()) { $user_submissions[$row['Assignment_
 
 <div id="viewSection" class="assignment-view">
     <h2 class="section-title">Current Assignments</h2>
+    <?php if (isset($_GET['error']) && $_GET['error'] === 'assignment_not_found'): ?>
+        <p style="color: red; padding: 10px; border: 1px solid red; margin-bottom: 15px;">Action failed: The assignment may have been deleted.</p>
+    <?php endif; ?>
     <?php if (empty($assignments)): ?><p>No assignments have been posted yet.</p><?php else: foreach ($assignments as $assignment): ?>
         <div class="card">
             <div class="card__header"><h3 class="card__title"><?php echo htmlspecialchars($assignment['Assignment_Title']); ?></h3><span class="card__meta-tag"><?php echo htmlspecialchars($assignment['Class_Name'] ?? 'General'); ?></span></div>

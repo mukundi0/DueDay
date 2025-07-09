@@ -26,14 +26,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
     }
+    
     if ($action === 'rsvp') {
-        $stmt = $conn->prepare("INSERT INTO Event_Attendee_Data (User_ID, Event_ID) VALUES (?, ?)");
-        $stmt->bind_param("ii", $user_id, $_POST['event_id']);
-        $stmt->execute(); $stmt->close();
-        award_achievement($conn, $user_id, 4);
-        header("Location: event.php?rsvp=success");
+        $event_id_to_rsvp = $_POST['event_id'];
+        
+        // ** FIX: Check if the event still exists before RSVPing **
+        $event_check_stmt = $conn->prepare("SELECT Event_ID FROM Events WHERE Event_ID = ?");
+        $event_check_stmt->bind_param("i", $event_id_to_rsvp);
+        $event_check_stmt->execute();
+        $event_exists = $event_check_stmt->get_result()->num_rows > 0;
+        $event_check_stmt->close();
+
+        if ($event_exists) {
+            $stmt = $conn->prepare("INSERT INTO Event_Attendee_Data (User_ID, Event_ID) VALUES (?, ?)");
+            $stmt->bind_param("ii", $user_id, $event_id_to_rsvp);
+            $stmt->execute();
+            $stmt->close();
+            award_achievement($conn, $user_id, 4);
+            header("Location: event.php?rsvp=success");
+        } else {
+            header("Location: event.php?error=event_not_found");
+        }
         exit();
     }
+    
     if ($action === 'cancel_rsvp') {
         $stmt = $conn->prepare("DELETE FROM Event_Attendee_Data WHERE User_ID = ? AND Event_ID = ?");
         $stmt->bind_param("ii", $user_id, $_POST['event_id']);
