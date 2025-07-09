@@ -18,6 +18,9 @@ $user_id = $_SESSION['user_id'];
 $user_fname = $_SESSION['user_fname'];
 $user_role = $_SESSION['role_name'];
 
+// ** FIX: Verify user is still active on every page load **
+verify_user_is_active($conn, $user_id);
+
 // Determine the active page to highlight the nav link
 $active_page = basename($_SERVER['PHP_SELF']);
 
@@ -57,11 +60,6 @@ if ($current_hour >= 5 && $current_hour < 12) {
                 <li class="nav-item <?php if ($active_page == 'event.php') echo 'active'; ?>"><a href="<?php echo $base_path; ?>/event.php"><img src="<?php echo $base_path; ?>/assets/icons/event.png" class="nav-icon"><span>Events</span></a></li>
                 <li class="nav-item <?php if ($active_page == 'timetable.php') echo 'active'; ?>"><a href="<?php echo $base_path; ?>/timetable.php"><img src="<?php echo $base_path; ?>/assets/icons/table.png" class="nav-icon"><span>Timetable</span></a></li>
             </ul>
-            <!-- <div class="sidebar-footer">
-                 <a href="<?php echo $base_path; ?>/auth/logout.php" class="logout-link">
-                    <img src="<?php echo $base_path; ?>/assets/icons/logout.png" class="nav-icon"><span>Logout</span>
-                </a>
-            </div> -->
         </div>
         <div class="main-content">
             <header class="welcome-header">

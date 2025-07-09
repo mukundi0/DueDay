@@ -7,8 +7,8 @@ error_reporting(E_ALL);
 ini_set('display_errors', 'On'); 
 // Log errors to a file instead of showing them to users on a live server.
 ini_set('log_errors', 'On'); 
-// Define the path to your error log file (ensure this path is writable by the server).
-ini_set('error_log', __DIR__ . '/../error.log');
+// --- FIX: Define the path to your error log file inside the gitignore folder ---
+ini_set('error_log', __DIR__ . '/../.gitignore/error.log');
 // --- END: UPDATED ERROR HANDLING ---
 
 
@@ -32,7 +32,29 @@ session_start();
 // --- 3. GLOBAL HELPER FUNCTIONS ---
 
 /**
- * --- ORIGINAL FUNCTION: KEPT FOR EXISTING FUNCTIONALITY ---
+ * --- NEW: Centralized Active User Check ---
+ * Checks if the logged-in user is still active. Kills session if not.
+ * @param mysqli $db_connection The database connection object.
+ * @param int $user_id The ID of the logged-in user.
+ */
+function verify_user_is_active(mysqli $db_connection, int $user_id) {
+    $stmt = $db_connection->prepare("SELECT status FROM Users WHERE User_ID = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $status = $stmt->get_result()->fetch_assoc()['status'] ?? 'inactive';
+    $stmt->close();
+
+    if ($status !== 'active') {
+        // Log the user out completely
+        session_unset();
+        session_destroy();
+        // Redirect to login page with a message
+        header("Location: /dueday/auth/login.php?deactivated=true");
+        exit();
+    }
+}
+
+/**
  * Awards an achievement to a user if they don't already have it.
  * @param mysqli $db_connection The database connection object.
  * @param int $user_id The user to award the achievement to.
@@ -53,21 +75,7 @@ function award_achievement(mysqli $db_connection, int $user_id, int $achievement
     }
 }
 
-
 /**
- * --- NEW: Centralized Role-Based Access Control ---
- * Checks if the current user has one of the allowed roles. Redirects if not.
- * @param array $allowed_roles An array of role names that are allowed. e.g., ['Admin', 'Module Leader']
- */
-function require_role(array $allowed_roles) {
-    if (!isset($_SESSION['role_name']) || !in_array($_SESSION['role_name'], $allowed_roles)) {
-        header("Location: /dueday/home.php"); // Redirect to a safe default page
-        exit();
-    }
-}
-
-/**
- * --- NEW: Targeted Notification Creator ---
  * Creates a notification and links it to a specific user.
  * @param mysqli $db_connection The database connection object.
  * @param int $user_id The user to send the notification to.
@@ -76,25 +84,20 @@ function require_role(array $allowed_roles) {
 function create_notification_for_user(mysqli $db_connection, int $user_id, string $content) {
     $db_connection->begin_transaction();
     try {
-        // Step 1: Insert the main notification record to get a Notification_ID
         $stmt_notification = $db_connection->prepare("INSERT INTO Notifications (Notification_Content, Notification_Date) VALUES (?, NOW())");
         $stmt_notification->bind_param("s", $content);
         $stmt_notification->execute();
         $notification_id = $db_connection->insert_id;
         $stmt_notification->close();
 
-        // Step 2: Link that notification to the specific user
         $stmt_user_notification = $db_connection->prepare("INSERT INTO Notification_User (Notification_ID, User_ID) VALUES (?, ?)");
         $stmt_user_notification->bind_param("ii", $notification_id, $user_id);
         $stmt_user_notification->execute();
         $stmt_user_notification->close();
 
-        // If both queries succeed, commit the transaction
         $db_connection->commit();
     } catch (mysqli_sql_exception $exception) {
-        // If anything fails, roll back the transaction
         $db_connection->rollback();
-        // Log the error for debugging, but don't stop the script
         error_log("Failed to create notification for User ID $user_id: " . $exception->getMessage());
     }
 }

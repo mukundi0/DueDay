@@ -1,13 +1,9 @@
 <?php
-// Use the core initializer
 require_once "../core/init.php";
 
-// --- NEW: DEFINE YOUR SECRET INVITATION CODES HERE ---
-// You can change these codes to anything you want. Keep them secret.
 define('MODULE_LEADER_CODE', 'ML-SECRET');
 define('EVENT_COORDINATOR_CODE', 'EC-SECRET');
 
-// If a user is already logged in, redirect them to the home page
 if (isset($_SESSION['user_id'])) {
     header('Location: ../home.php');
     exit();
@@ -16,14 +12,13 @@ if (isset($_SESSION['user_id'])) {
 $errors = [];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // --- Data Validation ---
     $fname = trim($_POST['first_name'] ?? '');
     $lname = trim($_POST['last_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $role_id = $_POST['role'] ?? '';
-    $invitation_code = trim($_POST['invitation_code'] ?? ''); // New field
+    $invitation_code = trim($_POST['invitation_code'] ?? '');
 
     if (empty($fname)) { $errors[] = "First name is required."; }
     if (empty($lname)) { $errors[] = "Last name is required."; }
@@ -33,17 +28,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($password !== $confirm_password) { $errors[] = "Passwords do not match."; }
     if (empty($role_id)) { $errors[] = "Please select a role."; }
 
-    // --- NEW: INVITATION CODE VALIDATION ---
-    // Role ID 1 = Module Leader, Role ID 3 = Event Coordinator (check your DB if different)
-    if ($role_id == 1 && $invitation_code !== MODULE_LEADER_CODE) {
+    // ** FIX: More robust invitation code validation **
+    $student_role_id = 2; // Assuming '2' is the Role_ID for 'Student'
+    $requires_code = ($role_id != $student_role_id);
+
+    if ($requires_code && empty($invitation_code)) {
+        $errors[] = "An invitation code is required for this role.";
+    } elseif ($role_id == 1 && $invitation_code !== MODULE_LEADER_CODE) {
         $errors[] = "Invalid invitation code for Module Leader role.";
-    }
-    if ($role_id == 3 && $invitation_code !== EVENT_COORDINATOR_CODE) {
+    } elseif ($role_id == 3 && $invitation_code !== EVENT_COORDINATOR_CODE) {
         $errors[] = "Invalid invitation code for Event Coordinator role.";
     }
-    // No code is needed for Role ID 2 (Student)
+    // No code needed for Role ID 2 (Student)
 
-    // --- Database Interaction ---
     if (empty($errors)) {
         $stmt_check = $conn->prepare("SELECT User_ID FROM Users WHERE Email = ?");
         $stmt_check->bind_param("s", $email);
