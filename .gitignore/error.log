@@ -4,3 +4,24 @@ Stack trace:
 #1 {main}
   thrown in C:\xampp\htdocs\dueday\admin\admin_classes.php on line 21
 [10-Jul-2025 01:10:21 Europe/Berlin] PHP Fatal error:  Maximum execution time of 120 seconds exceeded in C:\xampp\htdocs\dueday\sse_server.php on line 23
+[10-Jul-2025 11:35:11 Europe/Berlin] PHP Fatal error:  Maximum execution time of 120 seconds exceeded in C:\xampp\htdocs\dueday\sse_server.php on line 23
+[10-Jul-2025 11:38:36 Europe/Berlin] PHP Fatal error:  Maximum execution time of 120 seconds exceeded in C:\xampp\htdocs\dueday\sse_server.php on line 23
+[10-Jul-2025 11:40:22 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: MySQL server has gone away in C:\xampp\htdocs\dueday\sse_server.php:25
+Stack trace:
+#0 C:\xampp\htdocs\dueday\sse_server.php(25): mysqli->prepare('SELECT Announce...')
+#1 {main}
+  thrown in C:\xampp\htdocs\dueday\sse_server.php on line 25
+[10-Jul-2025 12:40:22 Africa/Nairobi] PHP Fatal error:  Uncaught mysqli_sql_exception: MySQL server has gone away in C:\xampp\htdocs\dueday\core\init.php:41
+Stack trace:
+#0 C:\xampp\htdocs\dueday\core\init.php(41): mysqli->prepare('SELECT status F...')
+#1 C:\xampp\htdocs\dueday\templates\header.php(13): verify_user_is_active(Object(mysqli), 8)
+#2 C:\xampp\htdocs\dueday\profile.php(2): require_once('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\dueday\core\init.php on line 41
+[10-Jul-2025 12:40:22 Africa/Nairobi] PHP Fatal error:  Uncaught mysqli_sql_exception: MySQL server has gone away in C:\xampp\htdocs\dueday\core\init.php:41
+Stack trace:
+#0 C:\xampp\htdocs\dueday\core\init.php(41): mysqli->prepare('SELECT status F...')
+#1 C:\xampp\htdocs\dueday\templates\header.php(13): verify_user_is_active(Object(mysqli), 8)
+#2 C:\xampp\htdocs\dueday\profile.php(2): require_once('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\dueday\core\init.php on line 41
