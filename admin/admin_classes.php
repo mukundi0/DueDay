@@ -71,7 +71,7 @@ if (isset($_GET['message'])) {
 
 
 // Fetch all existing classes to display in the list
-$classes = $conn->query("SELECT * FROM Classes ORDER BY Class_Name ASC")->fetch_all(MYSQLI_ASSOC);
+$classes = $conn->query("SELECT c.*, COUNT(uc.User_ID) as enrolled_count FROM Classes c LEFT JOIN user_classes uc ON c.Class_ID = uc.Class_ID GROUP BY c.Class_ID ORDER BY c.Class_Name ASC")->fetch_all(MYSQLI_ASSOC);
 $conn->close();
 
 // PRESENTATION VIEW
@@ -100,22 +100,37 @@ $conn->close();
 
 <div class="management-section">
     <h2>Existing Classes</h2>
-    <ul class="widget-list">
-        <?php if (empty($classes)): ?>
-            <li>No classes found. Add one using the form above.</li>
-        <?php else: ?>
-            <?php foreach ($classes as $class): ?>
-                <li class="widget-list-item">
-                    <span><?php echo htmlspecialchars($class['Class_Name']); ?></span>
-                    <form method="POST" action="admin_classes.php" data-confirm="Are you sure you want to delete this class? This can only be done if no students or assignments are linked to it.">
-                        <input type="hidden" name="action" value="delete_class">
-                        <input type="hidden" name="class_id" value="<?php echo $class['Class_ID']; ?>">
-                        <button type="submit" class="table-action-btn delete">Delete</button>
-                    </form>
-                </li>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </ul>
+    <div class="management-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Class Name</th>
+                    <th>Enrolled Students</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($classes)): ?>
+                    <tr><td colspan="3">No classes found. Add one using the form above.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($classes as $class): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($class['Class_Name']); ?></td>
+                            <td><?php echo $class['enrolled_count']; ?></td>
+                            <td class="action-cell">
+                                <a href="admin_enroll_students.php?class_id=<?php echo $class['Class_ID']; ?>" class="table-action-btn edit">Enroll Students</a>
+                                <form method="POST" action="admin_classes.php" data-confirm="Are you sure you want to delete this class? This can only be done if no students or assignments are linked to it.">
+                                    <input type="hidden" name="action" value="delete_class">
+                                    <input type="hidden" name="class_id" value="<?php echo $class['Class_ID']; ?>">
+                                    <button type="submit" class="table-action-btn delete">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <?php require_once 'templates/footer.php'; ?>
