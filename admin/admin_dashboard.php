@@ -1,5 +1,5 @@
 <?php
-// --- LOGIC ---
+// LOGIC 
 require_once 'templates/header.php'; // Includes connection, session, security, and sidebar
 
 // Fetch stats
@@ -9,7 +9,7 @@ $class_count = $conn->query("SELECT COUNT(*) as count FROM Classes")->fetch_asso
 $announcement_count = $conn->query("SELECT COUNT(*) as count FROM Announcements")->fetch_assoc()['count'];
 $conn->close();
 
-// --- PRESENTATION ---
+// PRESENTATION VIEW
 ?>
 <head>
     <title>Admin Dashboard</title>

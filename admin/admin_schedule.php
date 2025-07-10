@@ -1,5 +1,5 @@
 <?php
-// --- LOGIC ---
+//LOGIC
 require_once 'templates/header.php'; // Includes connection, session, security, and sidebar
 
 $message = '';
@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $start_time = $_POST['start_time'];
         $end_time = $_POST['end_time'];
 
-        // --- NEW: CONFLICT CHECKING LOGIC ---
+        // CONFLICT CHECKING LOGIC 
         $conflict_stmt = $conn->prepare(
             "SELECT Entry_ID FROM class_schedule 
              WHERE Venue_ID = ? 
@@ -82,7 +82,7 @@ $days_of_week = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday
 
 $conn->close();
 
-// --- PRESENTATION ---
+// PRESENTATION VIEW 
 ?>
 <head>
     <title>Manage Schedule - Admin</title>

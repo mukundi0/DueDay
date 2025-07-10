@@ -4,7 +4,7 @@ require_once 'templates/header.php';
 $message = '';
 $message_type = 'success';
 
-// --- ACTION HANDLING ---
+// ACTION HANDLING 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_archive->close();
     }
     
-    // ** NEW: Action to unarchive an announcement **
+    // Action to unarchive an announcement 
     if ($action === 'unarchive_announcement') {
         $stmt_unarchive = $conn->prepare("UPDATE Announcements SET Status = 'Active' WHERE Announcement_ID = ?");
         $stmt_unarchive->bind_param("i", $_POST['announcement_id']);
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_unarchive->close();
     }
     
-    // ** NEW: Action to permanently delete an announcement **
+    // Action to permanently delete an announcement 
     if ($action === 'delete_announcement') {
         $stmt_delete = $conn->prepare("DELETE FROM Announcements WHERE Announcement_ID = ?");
         $stmt_delete->bind_param("i", $_POST['announcement_id']);
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit();
 }
 
-// --- DATA FETCHING ---
+//  DATA FETCHING
 
 if(isset($_GET['message'])) {
     $message = htmlspecialchars($_GET['message']);

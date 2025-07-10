@@ -1,5 +1,5 @@
 <?php
-// --- LOGIC ---
+// LOGIC
 require_once 'templates/header.php'; // Includes connection, session, security, and sidebar
 
 $message = '';
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_class' && !empty($_POST['class_id'])) {
         $class_id_to_delete = $_POST['class_id'];
         
-        // ** NEW: Comprehensive check for all dependencies **
+        //Comprehensive check for all dependencies
         $check_assignments = $conn->query("SELECT COUNT(*) as count FROM assignments WHERE Class_ID = $class_id_to_delete")->fetch_assoc()['count'];
         $check_schedule = $conn->query("SELECT COUNT(*) as count FROM class_schedule WHERE Class_ID = $class_id_to_delete")->fetch_assoc()['count'];
         $check_polls = $conn->query("SELECT COUNT(*) as count FROM polls WHERE Class_ID = $class_id_to_delete")->fetch_assoc()['count'];
@@ -74,7 +74,7 @@ if (isset($_GET['message'])) {
 $classes = $conn->query("SELECT * FROM Classes ORDER BY Class_Name ASC")->fetch_all(MYSQLI_ASSOC);
 $conn->close();
 
-// --- PRESENTATION ---
+// PRESENTATION VIEW
 ?>
 <head>
     <title>Manage Classes - Admin</title>
