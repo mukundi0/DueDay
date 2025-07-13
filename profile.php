@@ -3,83 +3,130 @@ require_once 'templates/header.php'; // Includes session, DB connection, and use
 
 // --- MESSAGE HANDLING ---
 $message = '';
-$message_type = 'error'; // Default message type
+$message_type = 'error';
 
-// --- POST REQUEST HANDLING FOR PASSWORD CHANGE ---
+// --- POST REQUEST HANDLING ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $current_password = $_POST['current_password'];
-    $new_password = $_POST['new_password'];
-    $confirm_password = $_POST['confirm_password'];
+    $action = $_POST['action'] ?? '';
 
-    // Fetch user's current hashed password
-    $stmt_pass = $conn->prepare("SELECT Password FROM Users WHERE User_ID = ?");
-    $stmt_pass->bind_param("i", $user_id);
-    $stmt_pass->execute();
-    $result = $stmt_pass->get_result()->fetch_assoc();
-    $stmt_pass->close();
+    // --- NEW: LOGIC FOR PROFILE PICTURE UPLOAD ---
+    if ($action === 'upload_pfp') {
+        if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == UPLOAD_ERR_OK) {
+            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+            $file_type = mime_content_type($_FILES['profile_picture']['tmp_name']);
 
-    // Verify current password
-    if ($result && password_verify($current_password, $result['Password'])) {
-        if ($new_password === $confirm_password) {
-            if (strlen($new_password) >= 8) {
-                $hashed_new_password = password_hash($new_password, PASSWORD_DEFAULT);
-                $update_stmt = $conn->prepare("UPDATE Users SET Password = ? WHERE User_ID = ?");
-                $update_stmt->bind_param("si", $hashed_new_password, $user_id);
-                if ($update_stmt->execute()) {
-                    $message = "Password updated successfully!";
-                    $message_type = "success";
+            if (in_array($file_type, $allowed_types)) {
+                $target_dir = "uploads/pfp/";
+                if (!is_dir($target_dir)) { mkdir($target_dir, 0755, true); }
+                
+                $file_extension = pathinfo($_FILES["profile_picture"]["name"], PATHINFO_EXTENSION);
+                $safe_filename = "user_" . $user_id . "_" . time() . "." . $file_extension;
+                $target_file = $target_dir . $safe_filename;
+
+                if (move_uploaded_file($_FILES["profile_picture"]["tmp_name"], $target_file)) {
+                    // Update database with the new file path
+                    $stmt_update_pfp = $conn->prepare("UPDATE Users SET Profile_Picture_Path = ? WHERE User_ID = ?");
+                    $stmt_update_pfp->bind_param("si", $target_file, $user_id);
+                    if ($stmt_update_pfp->execute()) {
+                        $message = "Profile picture updated successfully!";
+                        $message_type = "success";
+                    } else {
+                        $message = "Error updating database record.";
+                    }
+                    $stmt_update_pfp->close();
                 } else {
-                    $message = "An error occurred while updating the password.";
+                    $message = "Sorry, there was an error uploading your file.";
                 }
-                $update_stmt->close();
             } else {
-                $message = "New password must be at least 8 characters long.";
+                $message = "Invalid file type. Please upload a JPG, PNG, or GIF.";
             }
         } else {
-            $message = "New passwords do not match.";
+            $message = "No file was uploaded or an error occurred.";
         }
-    } else {
-        $message = "Incorrect current password.";
+    }
+
+    // --- LOGIC FOR PASSWORD CHANGE ---
+    if ($action === 'change_password') {
+        $current_password = $_POST['current_password'];
+        $new_password = $_POST['new_password'];
+        $confirm_password = $_POST['confirm_password'];
+
+        $stmt_pass = $conn->prepare("SELECT Password FROM Users WHERE User_ID = ?");
+        $stmt_pass->bind_param("i", $user_id);
+        $stmt_pass->execute();
+        $result = $stmt_pass->get_result()->fetch_assoc();
+        $stmt_pass->close();
+
+        if ($result && password_verify($current_password, $result['Password'])) {
+            if ($new_password === $confirm_password) {
+                if (strlen($new_password) >= 8) {
+                    $hashed_new_password = password_hash($new_password, PASSWORD_DEFAULT);
+                    $update_stmt = $conn->prepare("UPDATE Users SET Password = ? WHERE User_ID = ?");
+                    $update_stmt->bind_param("si", $hashed_new_password, $user_id);
+                    if ($update_stmt->execute()) {
+                        $message = "Password updated successfully!";
+                        $message_type = "success";
+                    } else {
+                        $message = "An error occurred while updating the password.";
+                    }
+                    $update_stmt->close();
+                } else {
+                    $message = "New password must be at least 8 characters long.";
+                }
+            } else {
+                $message = "New passwords do not match.";
+            }
+        } else {
+            $message = "Incorrect current password.";
+        }
     }
 }
 
-// --- DATA FETCHING FOR GRADES DISPLAY ---
-$stmt_grades = $conn->prepare(
-    "SELECT a.Assignment_Title, asd.Grade, asd.Feedback
-     FROM assignment_submission_data asd
-     JOIN assignments a ON asd.Assignment_ID = a.Assignment_ID
-     WHERE asd.User_ID = ? AND asd.Grade IS NOT NULL AND asd.Grade != ''
-     ORDER BY a.Assignment_Title ASC"
-);
-$stmt_grades->bind_param("i", $user_id);
-$stmt_grades->execute();
-$graded_assignments = $stmt_grades->get_result()->fetch_all(MYSQLI_ASSOC);
-
-// We need the full user details for display, as the header may not have them all.
-$stmt_user_details = $conn->prepare("SELECT L_Name, Email FROM Users WHERE User_ID = ?");
+// --- DATA FETCHING FOR PAGE DISPLAY ---
+// Fetch full user details, including the new profile picture path
+$stmt_user_details = $conn->prepare("SELECT L_Name, Email, Profile_Picture_Path FROM Users WHERE User_ID = ?");
 $stmt_user_details->bind_param("i", $user_id);
 $stmt_user_details->execute();
 $user_details = $stmt_user_details->get_result()->fetch_assoc();
 $stmt_user_details->close();
+
+$graded_assignments = $conn->query(
+    "SELECT a.Assignment_Title, asd.Grade, asd.Feedback
+     FROM assignment_submission_data asd
+     JOIN assignments a ON asd.Assignment_ID = a.Assignment_ID
+     WHERE asd.User_ID = $user_id AND asd.Grade IS NOT NULL AND asd.Grade != ''
+     ORDER BY a.Assignment_Title ASC"
+)->fetch_all(MYSQLI_ASSOC);
 
 $conn->close();
 ?>
 
 <div class="form-container" style="max-width: 800px; margin: auto;">
     <h2 class="section-title">My Profile</h2>
-    
+
+    <?php if ($message): ?>
+        <p class="message-banner <?php echo $message_type; ?>"><?php echo htmlspecialchars($message); ?></p>
+    <?php endif; ?>
+
     <p><strong>Name:</strong> <?php echo htmlspecialchars($user_fname . ' ' . ($user_details['L_Name'] ?? '')); ?></p>
     <p><strong>Email:</strong> <?php echo htmlspecialchars($user_details['Email'] ?? ''); ?></p>
     <p><strong>Role:</strong> <?php echo htmlspecialchars($user_role); ?></p>
     <hr style="margin: 30px 0;">
 
-    <h3 class="section-title" style="font-size: 1.5rem;">Change Password</h3>
-    
-    <?php if ($message): ?>
-        <p class="message-banner <?php echo $message_type; ?>"><?php echo $message; ?></p>
-    <?php endif; ?>
+    <h3 class="section-title" style="font-size: 1.5rem;">Change Profile Picture</h3>
+    <form method="POST" action="profile.php" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="upload_pfp">
+        <div class="form-group">
+            <label for="profile_picture">Upload New Image:</label>
+            <input type="file" id="profile_picture" name="profile_picture" class="form-input" required>
+        </div>
+        <button type="submit" class="btn btn--primary">Upload Picture</button>
+    </form>
+    <hr style="margin: 30px 0;">
 
+    <h3 class="section-title" style="font-size: 1.5rem;">Change Password</h3>
     <form method="POST" action="profile.php">
+        <input type="hidden" name="action" value="change_password">
         <div class="form-group">
             <label for="current_password">Current Password:</label>
             <input type="password" id="current_password" name="current_password" class="form-input" required>

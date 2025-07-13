@@ -37,7 +37,12 @@ body {
     background-color: var(--sidebar-bg);
     color: var(--sidebar-text);
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
 
 .admin-logo {
@@ -275,4 +280,9 @@ th {
     border: none;
     padding: 0; 
     margin-bottom: 1rem;
+}
+@media (max-width: 500px) {
+    .dashboard-overview {
+        grid-template-columns: 1fr; /* Stack to a single column */
+    }
 }

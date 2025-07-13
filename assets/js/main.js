@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
             button.addEventListener('click', function () {
                 const assignmentId = this.getAttribute('data-assignment-id');
                 modalAssignmentIdInput.value = assignmentId;
-                commentsContainer.innerHTML = '<p>Loading comments...</p>';
+                commentsContainer.innerHTML = '<div class="loader"></div>';
                 fetch(`get_comments.php?assignment_id=${assignmentId}`)
                     .then(response => response.json())
                     .then(data => {
@@ -327,11 +327,56 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // ======================================================================
+    //  NEW REAL-TIME NOTIFICATION LOGIC
+    // ======================================================================
+    const initRealTimeNotifications = () => {
+        const notificationsList = document.getElementById('notifications-list');
+        if (!notificationsList) return;
+
+        const eventSource = new EventSource('sse_server.php');
+
+        eventSource.addEventListener('new_announcement', function(event) {
+            const announcement = JSON.parse(event.data);
+
+            const newLi = document.createElement('li');
+            newLi.className = 'widget-list-item';
+            newLi.style.backgroundColor = '#eef2ff';
+            
+            const itemContent = document.createElement('div');
+            itemContent.className = 'item-content';
+            
+            const itemTitle = document.createElement('span');
+            itemTitle.className = 'item-title';
+            itemTitle.textContent = announcement.Announcement_Title;
+            
+            const itemMeta = document.createElement('span');
+            itemMeta.className = 'item-meta';
+            itemMeta.textContent = announcement.Announcement_Description;
+
+            itemContent.appendChild(itemTitle);
+            itemContent.appendChild(itemMeta);
+            newLi.appendChild(itemContent);
+            
+            const noNotificationsMsg = document.getElementById('no-notifications-msg');
+            if (noNotificationsMsg) {
+                noNotificationsMsg.remove();
+            }
+
+            notificationsList.prepend(newLi);
+        });
+
+        eventSource.onerror = function(err) {
+            console.error("EventSource failed:", err);
+        };
+    };
+
+    // ======================================================================
     //  3. SCRIPT EXECUTION ROUTER
     // ======================================================================
     initAllModals();
     initViewToggler();
     initConfirmForms();
+    initRealTimeNotifications(); // Call the new real-time function
     if (document.querySelector('.assignment-view')) { initAssignmentsPage(); initCommentsModal(); }
     if (document.querySelector('.polls-view-section')) { initPollsPage(); }
     if (document.querySelector('.weekly-timetable')) { initTimetablePage(); }

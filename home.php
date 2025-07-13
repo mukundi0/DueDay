@@ -1,8 +1,20 @@
 <?php
 require_once 'templates/header.php';
 
+// ** NEW: Impersonation Notice Banner **
+// This notice will only show on the homepage when an admin is impersonating a user.
+if (isset($_SESSION['admin_id'])): 
+?>
+<div class="admin-notice-banner" style="background-color: var(--warning); border-color: #f59e0b; color: var(--text-primary);">
+    <p>You are currently impersonating <strong><?php echo htmlspecialchars($user_fname); ?></strong>.</p>
+    <a href="admin/stop_impersonating.php" class="btn btn--secondary">Return to Admin View</a>
+</div>
+<?php 
+endif;
+
 // --- ADMIN NOTICE BANNER ---
-if (isset($user_role) && $user_role === 'Admin'): 
+// This checks if the REAL user is an admin. It will be hidden during impersonation.
+if (!isset($_SESSION['admin_id']) && isset($user_role) && $user_role === 'Admin'): 
 ?>
 <div class="admin-notice-banner">
     <p>You are logged in as an Administrator.</p>
@@ -148,8 +160,12 @@ $stmt_notifications->close();
 
     <div class="card list-widget">
         <h2 class="section-title">Notifications</h2>
-        <?php if(empty($notifications)): ?><p class="widget-empty-msg">No new notifications.</p><?php else: ?>
-            <ul class="widget-list">
+        <?php if(empty($notifications)): ?>
+            <ul class="widget-list" id="notifications-list">
+                <li id="no-notifications-msg" class="widget-empty-msg">No new notifications.</li>
+            </ul>
+        <?php else: ?>
+            <ul class="widget-list" id="notifications-list">
                 <?php foreach($notifications as $notification): ?>
                 <li class="widget-list-item">
                     <div class="item-content">

@@ -314,292 +314,55 @@ body {
     .welcome-header { flex-direction: column; align-items: flex-start; gap: 15px; }
     .weekly-timetable, .dashboard-overview { grid-template-columns: 1fr; }
 }
-/* ADD THIS TO THE END OF YOUR style.css FILE */
-
-/* --- NEW: Home Page Dashboard Grid Layout --- */
-
-.dashboard-overview {
-    display: flex; /* Aligns stat cards in a row */
-    overflow-x: auto; /* Adds horizontal scroll if they don't fit */
-    gap: 20px;
-    padding-bottom: 20px; /* Makes space for the scrollbar */
-    margin-bottom: 30px;
-}
-.stat-card {
-    flex: 0 0 220px; /* Prevents cards from shrinking */
-    background: var(--white);
-    border: none;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 12px var(--navy-shadow);
-    text-align: center;
-    transition: all 0.3s ease;
-}
-/* --- NEW: Widget Styles --- */
-.widget-card, .list-widget {
-    border-left: none; /* Override default card style */
-    padding: 25px;
-}
-
-.list-widget ul {
-    list-style: none;
-    padding-left: 0;
-}
-
-.list-widget li {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--medium-gray);
-    font-size: 0.9rem;
-}
-
-.list-widget li:first-child {
-    padding-top: 0;
-}
-.list-widget li:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.list-widget-link {
-    display: block;
-    text-align: right;
-    margin-top: 15px;
-    font-weight: 600;
-    color: var(--egyptian-blue);
-    text-decoration: none;
-    font-size: 0.9rem;
-}
-.list-widget-link:hover {
-    text-decoration: underline;
-}
-
-/* --- NEW: Unit Card with Status --- */
-.unit-card {
-    background-color: var(--white);
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px var(--navy-shadow);
-    border: 1px solid var(--medium-gray);
-}
-
-.unit-name {
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.unit-status {
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 12px;
-    color: white;
-    font-weight: 500;
-    display: inline-block;
-}
-
-.unit-status--assignment {
-    background-color: var(--warning);
-    color: var(--dark-gray);
-}
-
-.unit-status--poll {
-    background-color: var(--egyptian-blue);
-}
-
-/* Responsive adjustments for the new grid */
-@media (max-width: 992px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr; /* Stack columns on smaller screens */
-    }
-}
-
-/* --- NEW: Poll Creation Form Styles --- */
-.poll-option-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.poll-option-item .form-input {
-    flex-grow: 1; /* Input takes up available space */
-}
-
-.remove-option-btn {
-    flex-shrink: 0; /* Prevents the button from shrinking */
-    background-color: var(--danger);
-    color: white;
-    border: none;
-    border-radius: 50%; /* Makes it circular */
-    width: 30px;
-    height: 30px;
-    font-size: 16px;
-    line-height: 30px;
-    text-align: center;
-    padding: 0;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.remove-option-btn:hover {
-    background-color: #a8272f; /* Darker red on hover */
-}
-/*
- * Admin Notice Banner Styling
- * This styles the banner that is only visible to administrators on the homepage.
- */
-.admin-notice-banner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1.5rem;
-    background-color: #e6f7ff; /* A light blue background */
-    border: 1px solid #91d5ff;  /* A matching border color */
-    border-radius: 8px;
-    color: #0050b3; /* Darker blue text for contrast */
-}
-
-.admin-notice-banner p {
-    margin: 0;
-    font-weight: 500;
-}
-
-/* Make it responsive for smaller screens */
-@media (max-width: 768px) {
-    .admin-notice-banner {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-    }
-}
 
 /* ==========================================================================
-   NEW WIDGET LIST STYLES
+   NEW IMPERSONATION BANNER STYLES
    ========================================================================== */
-.list-widget .widget-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.impersonation-banner {
+    background-color: var(--warning);
+    color: var(--text-primary);
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
-.widget-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 5px;
-    border-bottom: 1px solid var(--light-gray);
+.impersonation-banner a {
+    background-color: var(--dark-gray);
+    color: var(--white);
+    padding: 5px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
     transition: background-color 0.2s ease;
 }
 
-.widget-list-item:last-child {
-    border-bottom: none;
+.impersonation-banner a:hover {
+    background-color: #000;
+}
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--egyptian-blue);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
 }
 
-.widget-list-item:hover {
-    background-color: #f9f9f9;
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
-
-.item-content {
-    display: flex;
-    flex-direction: column;
-}
-
-.item-title {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 2px;
-}
-
-.item-meta {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.item-time {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--egyptian-blue);
-    flex-shrink: 0;
-    margin-left: 15px;
-}
-
-.status-due {
-    font-weight: 500;
-    color: var(--danger);
-}
-
-.widget-empty-msg {
-    color: var(--text-secondary);
-    padding: 20px 0;
-    text-align: center;
-}
-
-.list-widget-link {
-    display: block;
-    text-align: right;
-    margin-top: 15px;
-    font-weight: 600;
-    color: var(--egyptian-blue);
-    text-decoration: none;
-    font-size: 0.9rem;
-}
-.list-widget-link:hover {
-    text-decoration: underline;
-}
-/* --- Comment Modal Styles --- */
-.comments-container {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid var(--medium-gray);
-    border-radius: 5px;
-    padding: 15px;
-    margin-bottom: 20px;
-    background-color: var(--light-gray);
-}
-
-.comment-item {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--medium-gray);
-}
-
-.comment-item:last-child {
-    border-bottom: none;
-}
-
-.comment-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-    font-size: 0.9rem;
-}
-
-.comment-author {
-    font-weight: 600;
-    color: var(--egyptian-blue);
-}
-
-.comment-date {
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-}
-
-.comment-body {
-    color: var(--text-primary);
-    word-wrap: break-word;
-}
-/* ADD THESE NEW STYLES TO THE END OF YOUR CSS FILE */
-
-/* --- FIX: Styles for the container holding unit status tags --- */
-.unit-status-container {
-    display: flex;
-    flex-wrap: wrap; /* Allows tags to wrap if needed */
-    gap: 6px; /* Provides spacing between tags */
-}
-
-/* --- FIX: Improved grid layout for unit cards for better consistency --- */
-.units-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Use auto-fit for better alignment */
-    gap: 15px;
+@media (max-width: 500px) {
+    .dashboard-overview {
+        grid-template-columns: 1fr; /* Stack to a single column */
+    }
 }

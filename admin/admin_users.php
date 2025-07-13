@@ -39,6 +39,7 @@ $conn->close();
                     <td><span class="status-<?php echo $user['status']; ?>"><?php echo htmlspecialchars(ucfirst($user['status'])); ?></span></td>
                     <td class="action-cell">
                         <a href="edit_user.php?id=<?php echo $user['User_ID']; ?>" class="table-action-btn edit">Edit</a>
+
                         <?php if ($user['User_ID'] != $_SESSION['user_id']): ?>
                         <form method="POST" action="admin_users.php" data-confirm="Are you sure you want to change this user's status?">
                             <input type="hidden" name="action" value="toggle_user_status">

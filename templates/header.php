@@ -1,39 +1,40 @@
 <?php
-// Set the default timezone to Africa/Nairobi for all date/time functions
 date_default_timezone_set('Africa/Nairobi');
-// --------------------
 require_once __DIR__ . '/../core/init.php';
 
-// --- CONFIGURATION & PAGE DATA ---
-$base_path = '/dueday'; // Change this if you move your project folder
+$base_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', str_replace('\\', '/', dirname(__DIR__)));
 
-// Security: Check if user is logged in.
 if (!isset($_SESSION['user_id'])) {
     header("Location: " . $base_path . "/auth/login.php");
     exit();
 }
 
-// Get user data for the header
 $user_id = $_SESSION['user_id'];
-$user_fname = $_SESSION['user_fname'];
-$user_role = $_SESSION['role_name'];
-
-// ** FIX: Verify user is still active on every page load **
 verify_user_is_active($conn, $user_id);
 
-// Determine the active page to highlight the nav link
+$stmt_header = $conn->prepare("SELECT u.F_Name, r.Role_Name, u.Profile_Picture_Path FROM Users u JOIN Role r ON u.Role_ID = r.Role_ID WHERE u.User_ID = ?");
+$stmt_header->bind_param("i", $user_id);
+$stmt_header->execute();
+$header_user_data = $stmt_header->get_result()->fetch_assoc();
+$stmt_header->close();
+
+$user_fname = $header_user_data['F_Name'];
+$user_role = $header_user_data['Role_Name'];
+$user_pfp_path = $header_user_data['Profile_Picture_Path'];
+
+$profile_icon_src = !empty($user_pfp_path) && file_exists(__DIR__ . '/../' . $user_pfp_path) 
+    ? $base_path . '/' . $user_pfp_path 
+    : $base_path . '/assets/icons/admin.png';
+
 $active_page = basename($_SERVER['PHP_SELF']);
 
-// --- NEW: Time-based Greeting Logic ---
-date_default_timezone_set('Africa/Nairobi'); // Set to your timezone
 $current_hour = (int)date('H');
-$time_based_greeting = "Welcome back,"; // Default
-
+$time_based_greeting = "Welcome back,";
 if ($current_hour >= 5 && $current_hour < 12) {
     $time_based_greeting = "Good Morning,";
 } elseif ($current_hour >= 12 && $current_hour < 17) {
     $time_based_greeting = "Good Afternoon,";
-} elseif ($current_hour >= 17 || $current_hour < 5) {
+} else {
     $time_based_greeting = "Good Evening,";
 }
 ?>
@@ -69,7 +70,7 @@ if ($current_hour >= 5 && $current_hour < 12) {
                 </div>
                 <div class="profile-section">
                      <a href="<?php echo $base_path; ?>/profile.php" title="Profile & Settings">
-                        <img src="<?php echo $base_path; ?>/assets/icons/admin.png" alt="Profile" class="profile-icon">
+                        <img src="<?php echo $profile_icon_src; ?>" alt="Profile" class="profile-icon">
                     </a>
                 </div>
             </header>
