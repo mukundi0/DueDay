@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $message = "Venue deleted successfully!";
         } catch (mysqli_sql_exception $e) {
-            if ($e->getCode() == 1451) {
+            if ($e->getCode() == 1451)/*means foreign constraint key has failed*/{
                 $message = "Cannot delete venue. It is currently assigned to an event or a scheduled class.";
                 $message_type = 'error';
             } else {
