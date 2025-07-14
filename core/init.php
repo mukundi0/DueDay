@@ -15,7 +15,7 @@ ini_set('error_log', __DIR__ . '/../.gitignore/error.log');
 // --- 1. DATABASE CONNECTION ---
 $servername = "localhost";
 $username = "root";
-$password = "";
+$password = "karanei2006";
 $dbname = "DueDay";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
